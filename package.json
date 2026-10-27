@@ -1,20 +1,32 @@
 {
   "name": "flutternow",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "module",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "format": "prettier --write ."
   },
   "dependencies": {
-    "@vitejs/plugin-react": "^4.4.1",
-    "vite": "^5.4.15",
-    "typescript": "^5.8.3",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "lucide-react": "^0.468.0"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "@eslint/js": "^9.25.1",
+    "@vitejs/plugin-react": "^4.4.1",
+    "eslint": "^9.25.1",
+    "globals": "^16.0.0",
+    "prettier": "^3.5.3",
+    "typescript": "^5.8.3",
+    "vite": "^5.4.15",
+    "vitest": "^2.1.9",
+    "eslint-plugin-react": "^7.37.5"
+  }
 }

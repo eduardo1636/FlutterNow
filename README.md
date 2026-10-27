@@ -4,7 +4,7 @@ Editor visual de interfaces web, inspirado no fluxo de trabalho de construtores 
 
 ## Como executar
 
-Requisitos: Node.js 20+ e npm.
+Requisitos: Node.js 22 e npm (recomendado).
 
 ```bash
 git clone https://github.com/eduardo1636/FlutterNow.git
@@ -14,6 +14,20 @@ npm run dev
 ```
 
 Abra o endereço local exibido pelo Vite.
+
+## Validação e qualidade (F00)
+
+```bash
+npm run lint       # ESLint
+npm run typecheck  # Configuração TypeScript gradual
+npm test           # Testes Vitest
+npm run build      # Build de produção
+```
+
+A automação GitHub Actions executa essas verificações em pushes e pull requests.
+Confira [F00 — Estabilização](docs/F00_ESTABILIZACAO.md) e o [Plano Mestre](ROADMAP.md).
+
+> Aviso: a migração integral do JavaScript legado para TypeScript estrito está planejada para F01. As dependências são travadas com `package-lock.json` e o CI utiliza `npm ci` para instalações reproduzíveis.
 
 ## Funcionalidades disponíveis
 
