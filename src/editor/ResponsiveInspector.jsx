@@ -1,8 +1,8 @@
 import React from "react";
 import { Link2, RotateCcw, Smartphone, Tablet, Monitor } from "lucide-react";
 import {
-  COLOR_TOKEN_KEYS, DEFAULT_TOKENS, SPACING_TOKEN_KEYS, STYLE_FIELD_MAP,
-  TOKEN_LABELS, TOKEN_REF_PREFIX, breakpointCascade, effectiveStyle,
+  COLOR_TOKEN_KEYS, DEFAULT_TOKENS, STYLE_FIELD_MAP,
+  TOKEN_LABELS, TOKEN_REF_PREFIX, effectiveStyle,
   mergedTokens, resolveToken,
 } from "./designSystem.js";
 import { DEFAULT_LAYOUT_STYLES, isLayout } from "./layout.js";
@@ -14,7 +14,7 @@ const LAYOUT_FIELDS = ["background", "padding", "gap", "radius", "minHeight",
 const TEXT_FIELDS = ["background", "color", "fontSize", "textAlign", "marginTop", "marginBottom", "widthPercent"];
 const LABELS = { mobile: "Celular", tablet: "Tablet", desktop: "Computador" };
 
-export default function ResponsiveInspector({ node, device, tokens: projectTokens, onStyle }) {
+export default function ResponsiveInspector({ node, device, tokens: projectTokens, onStyle, onReset }) {
   const tokens = mergedTokens(projectTokens);
   const styles = node.styles?.[device === "mobile" ? "base" : device] || {};
   const current = effectiveStyle(node, device, tokens);
@@ -91,9 +91,7 @@ export default function ResponsiveInspector({ node, device, tokens: projectToken
           </label>}
         </div>;
       })}
-      {hasLocal && <button className="outline wide" onClick={() => {
-        for (const key of Object.keys(styles)) onStyle(key, null);
-      }}><RotateCcw size={14} /> Limpar overrides deste dispositivo</button>}
+      {hasLocal && <button className="outline wide" onClick={onReset}><RotateCcw size={14} /> Limpar overrides deste dispositivo</button>}
     </section>
   );
 }
