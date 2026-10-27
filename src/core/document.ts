@@ -160,7 +160,7 @@ export function migrateLegacy(raw: unknown): ProjectDocument {
   const pageId = "page-" + newId();
   const nodes: Record<string, WidgetNode> = Object.create(null);
   nodes[rootId] = { id: rootId, type: "column", props: {}, styles: { base: {} },
-    children: legacy.nodes.map(node => node.id) };
+    children: legacy.nodes.map((node: { id: string }) => node.id) };
   for (const node of legacy.nodes) {
     nodes[node.id] = { id: node.id, type: node.type,
       props: { ...node.props }, styles: { base: {} }, children: [] };
