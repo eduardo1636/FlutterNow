@@ -61,7 +61,11 @@ export const STYLE_FIELD_MAP = Object.fromEntries(STYLE_FIELDS.map(item => [item
 const COLOR_REGEX = /^#[0-9a-fA-F]{6}$/;
 
 export function mergedTokens(documentOrTokens) {
-  const tokens = documentOrTokens?.tokens || documentOrTokens || {};
+  // Documentos legados F01 não têm 'tokens'. Não misturar campos do documento
+  // (nodes, pages, id) com o mapa de tokens.
+  const isDocument = documentOrTokens && typeof documentOrTokens === "object" &&
+    ("schemaVersion" in documentOrTokens || "nodes" in documentOrTokens);
+  const tokens = isDocument ? documentOrTokens.tokens || {} : documentOrTokens || {};
   return { ...DEFAULT_TOKENS, ...tokens };
 }
 export function tokenIsValid(key, value) {
