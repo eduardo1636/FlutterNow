@@ -51,6 +51,12 @@ function subtree(document: ProjectDocument, rootId: string): string[] {
   visit(rootId);
   return found;
 }
+function checkNodeId(id: string): void {
+  if (typeof id !== "string" || !/^[\w-]{1,128}$/.test(id) ||
+      ["__proto__", "constructor", "prototype"].includes(id)) {
+    throw new Error("Identificador inválido");
+  }
+}
 function checkKey(key: string): void {
   if (!/^[a-zA-Z][\w-]{0,99}$/.test(key) ||
       ["__proto__", "constructor", "prototype"].includes(key)) {
@@ -74,6 +80,7 @@ function applyMutable(document: ProjectDocument, command: Command): ProjectDocum
       const parent = requireParent(document, command.parentId);
       checkIndex(command.index, parent.children.length);
       const node = structuredClone(command.node);
+      checkNodeId(node.id);
       if (Object.prototype.hasOwnProperty.call(document.nodes, node.id)) throw new Error("ID duplicado");
       if (node.children.length !== 0) throw new Error("Inserção inicial exige nó sem filhos");
       if (Object.keys(document.nodes).length >= MAX_NODES) throw new Error("Limite de componentes excedido");
@@ -106,7 +113,8 @@ function applyMutable(document: ProjectDocument, command: Command): ProjectDocum
     }
     case "duplicate": {
       if (rootIds(document).has(command.nodeId)) throw new Error("Raiz não pode ser duplicada");
-      if (command.newId in document.nodes) throw new Error("ID duplicado");
+      checkNodeId(command.newId);
+      if (Object.prototype.hasOwnProperty.call(document.nodes, command.newId)) throw new Error("ID duplicado");
       const parent = findParent(document, command.nodeId);
       const oldIds = subtree(document, command.nodeId);
       if (oldIds.length + Object.keys(document.nodes).length > MAX_NODES) {
