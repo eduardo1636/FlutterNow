@@ -124,6 +124,14 @@ describe("F01: engine de comandos", () => {
     assertDocument(changed);
   });
 
+  it("rejeita IDs reservados antes de adicionar ou duplicar elementos", () => {
+    const doc = fixtureTree(), root = rootOf(doc);
+    expect(() => insert(doc, root, 0, makeNode("__proto__"))).toThrow(/Identificador/);
+    expect(() => applyCommand(doc, { type: "duplicate", nodeId: "layout1", newId: "constructor" }))
+      .toThrow(/Identificador/);
+    expect(Object.prototype.hasOwnProperty.call(doc.nodes, "__proto__")).toBe(false);
+  });
+
   it("rejeita índice fora do intervalo e componente folha com filhos", () => {
     const doc=fixtureTree();
     expect(()=>insert(doc,"nestedText",0,makeNode("error"))).toThrow(/não aceita/);
