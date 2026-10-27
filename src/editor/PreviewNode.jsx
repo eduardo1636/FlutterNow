@@ -1,5 +1,3 @@
-import React from "react";
-
 export function renderNode(node) {
   const p = node.props;
   if (node.type === "heading") return <h2 style={{ fontSize: p.fontSize, color: p.color, textAlign: p.align, margin: 0, lineHeight: 1.25 }}>{p.text}</h2>;
