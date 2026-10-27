@@ -9,7 +9,7 @@ Requisitos: Node.js 22 e npm (recomendado).
 ```bash
 git clone https://github.com/eduardo1636/FlutterNow.git
 cd FlutterNow
-npm install
+npm ci
 npm run dev
 ```
 
@@ -25,9 +25,9 @@ npm run build      # Build de produção
 ```
 
 A automação GitHub Actions executa essas verificações em pushes e pull requests.
-Confira [F00 — Estabilização](docs/F00_ESTABILIZACAO.md) e o [Plano Mestre](ROADMAP.md).
+Confira [F00 — Estabilização](docs/F00_ESTABILIZACAO.md), [F01 — Documento e comandos](docs/F01_DOCUMENTOS_COMANDOS.md) e o [Plano Mestre](ROADMAP.md).
 
-> Aviso: a migração integral do JavaScript legado para TypeScript estrito está planejada para F01. As dependências são travadas com `package-lock.json` e o CI utiliza `npm ci` para instalações reproduzíveis.
+> Observação: o motor documental e os comandos da F01 utilizam TypeScript estrito. A interface legada em JSX ainda será migrada gradualmente. As dependências são travadas com `package-lock.json` e o CI utiliza `npm ci`.
 
 ## Funcionalidades disponíveis
 
@@ -36,9 +36,13 @@ Confira [F00 — Estabilização](docs/F00_ESTABILIZACAO.md) e o [Plano Mestre](
 - Edição de textos, cores, arredondamento, alinhamento, tamanho de fonte e dimensões.
 - Prévia em dimensões de celular, tablet e desktop.
 - Geração e download de um componente React `App.jsx`.
-- Salvamento automático no `localStorage` do navegador e importação/exportação de projeto JSON.
+- Salvamento automático no `localStorage`, migração do JSON antigo para formato versionado, backup legado e importação/exportação.
 - Desfazer/refazer nas alterações de layout e propriedades.
 - Sem backend e sem chave de API.
+
+## Modelo de projeto F01
+
+O motor interno já suporta árvores de componentes e documentos com múltiplas páginas. A interface ainda exibe apenas os componentes diretos da raiz da página ativa. Para documentos com containers aninhados ou múltiplas páginas, o editor mostra um aviso e bloqueia a exportação React incompleta. O JSON completo permanece exportável e importável. A interface de aninhamento visual é a próxima etapa (F02).
 
 ## Limitações da primeira versão
 
