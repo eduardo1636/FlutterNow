@@ -108,7 +108,7 @@ export function validateDocument(raw: unknown): asserts raw is ProjectDocument {
     assert(record(value) && value.id === id &&
       typeof value.type === "string" && COMPONENT_TYPES.has(value.type), "Nó inválido");
     safeMap(value.props, "Propriedades");
-    const definition = (components as Array<{
+    const definition = (components as unknown as Array<{
       type: string; defaults: Record<string, PropValue>
     }>).find(component => component.type === value.type);
     if (definition) {
