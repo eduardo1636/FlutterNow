@@ -33,11 +33,6 @@ export const COLOR_TOKEN_KEYS = Object.keys(DEFAULT_TOKENS).filter(key => key.st
 export const SPACING_TOKEN_KEYS = Object.keys(DEFAULT_TOKENS).filter(key => key.startsWith("spacing"));
 export const TOKEN_REF_PREFIX = "token:";
 
-const NUMERIC_KEYS = new Set([
-  "padding", "gap", "radius", "minHeight", "maxWidth", "fontSize", "marginTop", "marginBottom",
-  "widthPercent", "height", "borderWidth",
-]);
-const COLOR_KEYS = new Set(["background", "color", "borderColor"]);
 const ENUMS = Object.freeze({
   textAlign: ["left", "center", "right"],
   justifyContent: ["flex-start", "center", "flex-end", "space-between", "space-around"],
