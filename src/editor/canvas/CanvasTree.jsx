@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { GripVertical, Plus } from "lucide-react";
 import { renderNode } from "../PreviewNode.jsx";
 import { componentName, getLayoutCSS, isLayout } from "../layout.js";
+import { reactStyle } from "../designSystem.js";
 
 function DropSlot({ parentId, index, onDropItem, preview, horizontal = false }) {
   const [active, setActive] = useState(false);
@@ -33,7 +34,7 @@ function DropSlot({ parentId, index, onDropItem, preview, horizontal = false }) 
   );
 }
 
-function Children({ document, parentId, selectedId, onSelect, onDropItem, preview, depth }) {
+function Children({ document, parentId, selectedId, onSelect, onDropItem, preview, depth, device, tokens }) {
   const parent = document.nodes[parentId];
   const row = parent.type === "row";
   return (
@@ -49,6 +50,9 @@ function Children({ document, parentId, selectedId, onSelect, onDropItem, previe
             onDropItem={onDropItem}
             preview={preview}
             depth={depth + 1}
+            device={device}
+            tokens={tokens}
+            inRow={row}
           />
           <DropSlot parentId={parentId} index={index + 1} onDropItem={onDropItem} preview={preview} horizontal={row} />
         </React.Fragment>
@@ -60,13 +64,17 @@ function Children({ document, parentId, selectedId, onSelect, onDropItem, previe
   );
 }
 
-export function EditableNode({ document, nodeId, selectedId, onSelect, onDropItem, preview, depth }) {
+export function EditableNode({ document, nodeId, selectedId, onSelect, onDropItem, preview, depth, device, tokens, inRow = false }) {
   const node = document.nodes[nodeId];
   const layout = isLayout(node.type);
+  const customStyle = reactStyle(node, device, tokens);
+  const wrapperStyle = customStyle.width ? { width: customStyle.width,
+    ...(inRow ? { flex: `0 0 ${customStyle.width}` } : {}) } : undefined;
   return (
     <div
       className={"fn-item" + (selectedId === nodeId && !preview ? " is-selected" : "") + (layout ? " is-layout" : "")}
       data-node-id={nodeId}
+      style={wrapperStyle}
       draggable={!preview}
       onDragStart={(event) => {
         if (preview) return;
@@ -83,7 +91,7 @@ export function EditableNode({ document, nodeId, selectedId, onSelect, onDropIte
     >
       {!preview && <span className="fn-item-tag"><GripVertical size={12} /> {componentName(node.type)}</span>}
       {layout ? (
-        <div className={"fn-layout fn-layout-" + node.type} style={getLayoutCSS(node)}>
+        <div className={"fn-layout fn-layout-" + node.type} style={getLayoutCSS(node, device, tokens)}>
           <Children
             document={document}
             parentId={nodeId}
@@ -92,16 +100,18 @@ export function EditableNode({ document, nodeId, selectedId, onSelect, onDropIte
             onDropItem={onDropItem}
             preview={preview}
             depth={depth}
+            device={device}
+            tokens={tokens}
           />
         </div>
       ) : (
-        renderNode(node)
+        renderNode(node, customStyle)
       )}
     </div>
   );
 }
 
-export default function CanvasTree({ document, page, selectedId, onSelect, onDropItem, preview }) {
+export default function CanvasTree({ document, page, selectedId, onSelect, onDropItem, preview, device, tokens }) {
   return (
     <div
       className={"fn-canvas-root" + (preview ? " fn-canvas-preview" : "")}
@@ -117,6 +127,8 @@ export default function CanvasTree({ document, page, selectedId, onSelect, onDro
           onDropItem={onDropItem}
           preview={preview}
           depth={0}
+          device={device}
+          tokens={tokens}
         />
       </div>
     </div>

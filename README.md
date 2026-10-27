@@ -25,7 +25,7 @@ npm run build      # Build de produção
 ```
 
 A automação GitHub Actions executa essas verificações em pushes e pull requests.
-Confira [F00 — Estabilização](docs/F00_ESTABILIZACAO.md), [F01 — Documento e comandos](docs/F01_DOCUMENTOS_COMANDOS.md), [F02 — Canvas aninhado](docs/F02_CANVAS_ANINHADO.md) e o [Plano Mestre](ROADMAP.md).
+Confira [F00 — Estabilização](docs/F00_ESTABILIZACAO.md), [F01 — Documento e comandos](docs/F01_DOCUMENTOS_COMANDOS.md), [F02 — Canvas aninhado](docs/F02_CANVAS_ANINHADO.md), [F03 — Design System](docs/F03_DESIGN_SYSTEM.md) e o [Plano Mestre](ROADMAP.md).
 
 > Observação: o motor documental e os comandos da F01 utilizam TypeScript estrito. A interface legada em JSX ainda será migrada gradualmente. As dependências são travadas com `package-lock.json` e o CI utiliza `npm ci`.
 
@@ -34,6 +34,8 @@ Confira [F00 — Estabilização](docs/F00_ESTABILIZACAO.md), [F01 — Documento
 - Paleta com título, parágrafo, botão, campo de texto, cartão, imagem, divisor, espaçamento, **container, linha e coluna**.
 - Adição por clique ou arrastar e soltar; **aninhamento em containers**, reordenação pelo canvas, árvore visual ou botões subir/descer.
 - Edição de textos, cores, arredondamento, alinhamento, tamanho de fonte e dimensões.
+- **Design tokens** e três presets de tema, com vínculo de propriedades.
+- **Estilos responsivos** por dispositivo, com herança celular → tablet → desktop.
 - Prévia em dimensões de celular, tablet e desktop, controles de zoom e árvore de componentes.
 - Geração e download de um componente React `App.jsx`.
 - Salvamento automático no `localStorage`, migração do JSON antigo para formato versionado, backup legado e importação/exportação.
@@ -42,7 +44,7 @@ Confira [F00 — Estabilização](docs/F00_ESTABILIZACAO.md), [F01 — Documento
 
 ## Modelo de projeto F01
 
-O motor interno suporta árvores de componentes e documentos com múltiplas páginas. O editor F02 agora permite aninhar containers, linhas e colunas. A interface de múltiplas páginas será adicionada na F05. O código React ainda não é exportável para estruturas aninhadas; nesses casos a exportação fica bloqueada para evitar código incompleto. O JSON completo permanece exportável e importável.
+O motor interno suporta árvores de componentes e documentos com múltiplas páginas. O editor F02 agora permite aninhar containers, linhas e colunas. A interface de múltiplas páginas será adicionada na F05. O código React ainda não é exportável para estruturas aninhadas ou estilos avançados da F03; nesses casos a exportação fica bloqueada para evitar código incompleto. O JSON completo permanece exportável e importável.
 
 ## Limitações da primeira versão
 
