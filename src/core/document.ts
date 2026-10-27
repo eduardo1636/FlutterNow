@@ -1,4 +1,5 @@
 import { initial, parseProjectJSON, newId, components } from "../editor/project.js";
+import { DEFAULT_TOKENS, tokenIsValid, validateStyleEntry } from "../editor/designSystem.js";
 
 /** Versioned document, shared by editor commands, persistence and future exporters. */
 export const SCHEMA_VERSION = 1;
@@ -48,6 +49,8 @@ export interface ProjectDocument {
   activePageId: string;
   pages: ProjectPage[];
   nodes: Record<string, WidgetNode>;
+  /** Optional for legacy schemaVersion=1 documents; filled by first token edit. */
+  tokens?: Record<string, PropValue>;
 }
 function assert(value: unknown, message: string): asserts value {
   if (!value) throw new Error(message);
@@ -71,6 +74,12 @@ function safeMap(input: unknown, label: string): asserts input is Record<string,
       key !== "constructor" && key !== "prototype" && safeValue(value), label + " inválido");
   }
 }
+function validateStyles(input: unknown, label: string): void {
+  safeMap(input, label);
+  for (const [key, value] of Object.entries(input as Record<string, unknown>)) {
+    assert(validateStyleEntry(key, value), "Estilo não permitido: " + key);
+  }
+}
 function validatePageStyle(input: unknown): asserts input is PageStyle {
   assert(record(input), "Estilo da página inválido");
   assert(typeof input.background === "string" && /^#[0-9a-fA-F]{6}$/.test(input.background),
@@ -88,6 +97,13 @@ export function validateDocument(raw: unknown): asserts raw is ProjectDocument {
   assert(Array.isArray(raw.pages) && raw.pages.length >= 1 && raw.pages.length <= 100,
     "Páginas inválidas");
   assert(record(raw.nodes) && Object.keys(raw.nodes).length <= MAX_NODES, "Nós inválidos");
+  if (raw.tokens !== undefined) {
+    assert(record(raw.tokens), "Tokens inválidos");
+    assert(Object.keys(raw.tokens).length <= Object.keys(DEFAULT_TOKENS).length, "Tokens inválidos");
+    for (const [key, value] of Object.entries(raw.tokens)) {
+      assert(tokenIsValid(key, value), "Token de design inválido: " + key);
+    }
+  }
   const nodes = raw.nodes as Record<string, unknown>;
   const allIds = Object.keys(nodes);
   const pageIds = new Set<string>(), roots = new Set<string>(), routes = new Set<string>();
@@ -122,9 +138,9 @@ export function validateDocument(raw: unknown): asserts raw is ProjectDocument {
     for (const key of Object.keys(value.styles)) {
       assert(["base", "tablet", "desktop"].includes(key), "Breakpoint desconhecido");
     }
-    safeMap(value.styles.base, "Estilo base");
-    if (value.styles.tablet !== undefined) safeMap(value.styles.tablet, "Estilo tablet");
-    if (value.styles.desktop !== undefined) safeMap(value.styles.desktop, "Estilo desktop");
+    validateStyles(value.styles.base, "Estilo base");
+    if (value.styles.tablet !== undefined) validateStyles(value.styles.tablet, "Estilo tablet");
+    if (value.styles.desktop !== undefined) validateStyles(value.styles.desktop, "Estilo desktop");
     assert(Array.isArray(value.children) && value.children.length <= MAX_NODES,
       "Filhos inválidos");
     if (!CONTAINER_TYPES.has(value.type)) {
@@ -182,6 +198,7 @@ export function migrateLegacy(raw: unknown): ProjectDocument {
     pages: [{ id: pageId, name: "Página inicial", route: "/", rootId,
       style: { ...legacy.page } }],
     nodes,
+    tokens: { ...DEFAULT_TOKENS },
   });
 }
 export function createDocument(): ProjectDocument {
