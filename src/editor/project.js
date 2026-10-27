@@ -61,3 +61,5 @@ export function parseProjectJSON(raw) {
     }))
   };
 }
+
+export const fieldLabels = { text: "Conteúdo / URL", background: "Cor de fundo", color: "Cor do texto", radius: "Arredondamento", fontSize: "Tamanho da fonte", height: "Altura", align: "Alinhamento" };
