@@ -1,49 +1,88 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Blocks, Smartphone, Tablet, Monitor, Save, Download, Code2, Undo2, Redo2, Trash2, Copy, Plus, GripVertical, ChevronUp, ChevronDown, Layers, SlidersHorizontal, MousePointer2, FileJson, Upload, Sparkles } from "lucide-react";
 
-import { components, fieldLabels, newId, readProject, parseProjectJSON } from "./editor/project.js";
+import { components, fieldLabels, newId } from "./editor/project.js";
+import { createSession, reduceSession } from "./core/session";
+import { loadStoredDocument, saveStoredDocument } from "./core/persistence";
+import { parseDocumentJSON, serializeDocument, toLegacyProjection, nodeFromLegacy, CONTAINER_TYPES } from "./core/document";
 import { renderNode } from "./editor/PreviewNode.jsx";
 import { generateCode } from "./editor/codegen.js";
 import { downloadFile } from "./editor/download.js";
 
 export default function App() {
-  const [project, setProject] = useState(readProject);
+  const [bootstrap] = useState(() => loadStoredDocument(localStorage));
+  const [session, setSession] = useState(() => createSession(bootstrap.document));
+  const [storageLocked, setStorageLocked] = useState(bootstrap.locked);
+  const [saveFailed, setSaveFailed] = useState(bootstrap.locked);
+  const document = session.present;
+  const project = useMemo(() => toLegacyProjection(document), [document]);
+  const activePage = document.pages.find(page => page.id === document.activePageId);
+  const rootId = activePage.rootId;
+  const hasNestedNodes = document.pages.length > 1 || Object.values(document.nodes).some(node =>
+    CONTAINER_TYPES.has(node.type) && node.id !== rootId);
   const [selected, setSelected] = useState(null);
   const [device, setDevice] = useState("mobile");
   const [tab, setTab] = useState("editor");
-  const [notice, setNotice] = useState("");
-  const history = useRef([]);
-  const future = useRef([]);
+  const [notice, setNotice] = useState(bootstrap.warning || "");
   const importRef = useRef(null);
   const selectedNode = project.nodes.find(n => n.id === selected);
   const source = useMemo(() => generateCode(project), [project]);
-  useEffect(() => { try { localStorage.setItem("flutternow-project-v1", JSON.stringify(project)); } catch { setNotice("Não foi possível salvar no navegador. Exporte um backup JSON."); } }, [project]);
-  function commit(mutator) {
-    history.current.push(structuredClone(project));
-    if (history.current.length > 60) history.current.shift();
-    future.current = [];
-    setProject(current => mutator(structuredClone(current)));
+  useEffect(() => {
+    if (storageLocked) return;
+    try { saveStoredDocument(localStorage, document); setSaveFailed(false); }
+    catch { setSaveFailed(true); setNotice("Falha ao salvar! Exporte um backup JSON do projeto."); }
+  }, [document, storageLocked]);
+  function commit(command) {
+    setSession(current => reduceSession(current, { type: "commit", command }));
   }
   function add(type, index = project.nodes.length) {
     const definition = components.find(c => c.type === type);
     if (!definition) return;
     const id = newId();
-    commit(current => { current.nodes.splice(index, 0, { id, type, props: { ...definition.defaults } }); return current; });
+    commit({ type: "insert", parentId: rootId, index,
+      node: nodeFromLegacy(id, type, definition.defaults) });
     setSelected(id); setTab("editor");
   }
-  function updateProp(key, value) { if (!selectedNode) return; commit(current => { const node = current.nodes.find(n => n.id === selected); if (node) node.props[key] = value; return current; }); }
-  function updatePage(key, value) { commit(current => { current.page[key] = value; return current; }); }
-  function move(index, delta) { const next = index + delta; if (next < 0 || next >= project.nodes.length) return; commit(current => { const [item] = current.nodes.splice(index, 1); current.nodes.splice(next, 0, item); return current; }); }
-  function remove(id) { commit(current => { current.nodes = current.nodes.filter(n => n.id !== id); return current; }); setSelected(null); }
-  function duplicate() { if (!selectedNode) return; const id = newId(); commit(current => { const index = current.nodes.findIndex(n => n.id === selected); current.nodes.splice(index + 1, 0, { ...structuredClone(selectedNode), id }); return current; }); setSelected(id); }
-  function undo() { if (!history.current.length) return; future.current.push(structuredClone(project)); setProject(history.current.pop()); setSelected(null); }
-  function redo() { if (!future.current.length) return; history.current.push(structuredClone(project)); setProject(future.current.pop()); setSelected(null); }
+  function updateProp(key, value) {
+    if (selectedNode) commit({ type: "setProp", nodeId: selected, key, value });
+  }
+  function updatePage(key, value) {
+    const valid = key === "background" ? value : Math.max(0, Math.min(300, Number(value) || 0));
+    commit({ type: "setPageStyle", pageId: document.activePageId, key, value: valid });
+  }
+  function move(index, delta) {
+    const next = index + delta;
+    if (next < 0 || next >= project.nodes.length) return;
+    commit({ type: "move", nodeId: project.nodes[index].id, parentId: rootId,
+      index: delta > 0 ? next + 1 : next });
+  }
+  function remove(id) {
+    commit({ type: "remove", nodeId: id });
+    setSelected(null);
+  }
+  function duplicate() {
+    if (!selectedNode) return;
+    const id = newId();
+    commit({ type: "duplicate", nodeId: selected, newId: id });
+    setSelected(id);
+  }
+  function undo() {
+    setSession(current => reduceSession(current, { type: "undo" }));
+    setSelected(null);
+  }
+  function redo() {
+    setSession(current => reduceSession(current, { type: "redo" }));
+    setSelected(null);
+  }
   function importProject(event) {
     const file = event.target.files?.[0]; if (!file) return;
     file.text().then(value => {
       try {
-        const data = parseProjectJSON(value);
-        commit(() => ({ name: data.name, nodes: data.nodes, page: data.page })); setSelected(null); setNotice("Projeto importado!");
+        const data = parseDocumentJSON(value);
+        setStorageLocked(false);
+        commit({ type: "replace", document: data });
+        setSelected(null);
+        setNotice("Projeto importado!");
       } catch { setNotice("Arquivo inválido."); }
       event.target.value = "";
     });
@@ -56,7 +95,7 @@ export default function App() {
     else if (id) {
       const from = project.nodes.findIndex(node => node.id === id);
       if (from < 0) return;
-      commit(current => { const [node] = current.nodes.splice(from, 1); current.nodes.splice(index > from ? index - 1 : index, 0, node); return current; });
+      commit({ type: "move", nodeId: id, parentId: rootId, index });
     }
   }
   function DropZone({ index }) { return <div className="drop-zone" onDragOver={e => e.preventDefault()} onDrop={e => onDrop(e, index)} aria-label="Solte um componente aqui"><span>+ Soltar aqui</span></div>; }
@@ -64,13 +103,13 @@ export default function App() {
   return <div className="app-shell">
     <header className="topbar">
       <div className="brand"><div className="brand-logo"><Blocks size={19}/></div><span>Flutter<span className="brand-accent">Now</span></span><span className="version">BETA</span></div>
-      <div className="project-name"><input aria-label="Nome do projeto" value={project.name} onChange={e => setProject(v => ({ ...v, name: e.target.value }))}/><span className="saved"><Save size={13}/> Salvo automaticamente</span></div>
+      <div className="project-name"><input aria-label="Nome do projeto" value={project.name} maxLength={200} onChange={e => commit({ type: "setName", value: e.target.value })}/><span className="saved"><Save size={13}/> {storageLocked ? "Modo protegido — importe um backup" : saveFailed ? "Falha ao salvar — faça backup" : "Salvo automaticamente"}</span></div>
       <div className="top-actions">
-        <button title="Desfazer" disabled={!history.current.length} onClick={undo}><Undo2 size={17}/></button>
-        <button title="Refazer" disabled={!future.current.length} onClick={redo}><Redo2 size={17}/></button>
+        <button title="Desfazer" disabled={!session.past.length} onClick={undo}><Undo2 size={17}/></button>
+        <button title="Refazer" disabled={!session.future.length} onClick={redo}><Redo2 size={17}/></button>
         <span className="top-separator"/>
-        <button onClick={() => { downloadFile("flutternow-project.json", JSON.stringify(project, null, 2), "application/json"); setNotice("Projeto exportado!"); }}><FileJson size={16}/> <span>Projeto</span></button>
-        <button className="primary" onClick={() => { downloadFile("App.jsx", source, "text/javascript"); setNotice("Código React exportado!"); }}><Download size={16}/> Exportar código</button>
+        <button onClick={() => { downloadFile("flutternow-project-v1.json", serializeDocument(document), "application/json"); setNotice("Projeto exportado!"); }}><FileJson size={16}/> <span>Projeto</span></button>
+        <button className="primary" disabled={hasNestedNodes} title={hasNestedNodes ? "Exportação de páginas e containers será implementada no gerador completo" : "Exportar componente React"} onClick={() => { downloadFile("App.jsx", source, "text/javascript"); setNotice("Código React exportado!"); }}><Download size={16}/> Exportar código</button>
       </div>
     </header>
     <div className="workspace">
@@ -88,6 +127,7 @@ export default function App() {
           <span className="resolution">{device === "mobile" ? "390 × 844" : device === "tablet" ? "768 × 1024" : "100%"} • Visualização</span>
           <div className="mode-picker"><button className={tab === "editor" ? "active" : ""} onClick={() => setTab("editor")}><MousePointer2 size={15}/> Editor</button><button className={tab === "code" ? "active" : ""} onClick={() => setTab("code")}><Code2 size={15}/> Código</button></div>
         </div>
+        {hasNestedNodes && <div role="status" className="compat-warning">Este projeto contém páginas ou containers aninhados. A versão F01 apresenta apenas os elementos do primeiro nível da página ativa. O conteúdo completo está preservado no JSON; a edição visual aninhada virá na F02.</div>}
         {tab === "editor" ? <div className="canvas-scroller">
           <div className={"device-shell " + device}>
             <div className="device-bar"><span/><span/><span/></div>
@@ -98,14 +138,14 @@ export default function App() {
             </div>
           </div>
           <div className="canvas-tip"><Sparkles size={14}/> Selecione um elemento para editar suas propriedades</div>
-        </div> : <div className="code-panel"><div className="code-heading"><span>src/App.jsx</span><button onClick={() => navigator.clipboard.writeText(source).then(() => setNotice("Código copiado!"))}><Copy size={15}/> Copiar</button></div><pre><code>{source}</code></pre></div>}
+        </div> : <div className="code-panel"><div className="code-heading"><span>src/App.jsx</span>{!hasNestedNodes && <button onClick={() => navigator.clipboard.writeText(source).then(() => setNotice("Código copiado!"))}><Copy size={15}/> Copiar</button>}</div>{hasNestedNodes ? <div className="code-unavailable">A geração completa de código React para projetos com páginas ou containers aninhados chegará na F07. Exporte o JSON para manter todas as informações.</div> : <pre><code>{source}</code></pre>}</div>}
       </section>
       <aside className="sidebar properties-panel">
         <div className="panel-heading"><span><SlidersHorizontal size={16}/> Propriedades</span></div>
         <div className="sidebar-scroller">
           {selectedNode ? <>
             <div className="inspector-title"><span>{components.find(c => c.type === selectedNode.type)?.name}</span><span className="muted">Elemento</span></div>
-            {Object.entries(selectedNode.props).map(([key, val]) => <label className="property-field" key={key}><span>{fieldLabels[key] || key}</span>{key === "align" ? <select value={val} onChange={e => updateProp(key, e.target.value)}><option value="left">Esquerda</option><option value="center">Centro</option><option value="right">Direita</option></select> : typeof val === "number" ? <input type="number" min="0" max="300" value={val} onChange={e => updateProp(key, Number(e.target.value))}/> : (key === "color" || key === "background") ? <div className="color-field"><input aria-label={fieldLabels[key]} type="color" value={val} onChange={e => updateProp(key, e.target.value)}/><span>{val}</span></div> : <textarea rows={key === "text" ? 3 : 1} value={val} onChange={e => updateProp(key, e.target.value)}/>}</label>)}
+            {Object.entries(selectedNode.props).map(([key, val]) => <label className="property-field" key={key}><span>{fieldLabels[key] || key}</span>{key === "align" ? <select value={val} onChange={e => updateProp(key, e.target.value)}><option value="left">Esquerda</option><option value="center">Centro</option><option value="right">Direita</option></select> : typeof val === "number" ? <input type="number" min="0" max="300" value={val} onChange={e => updateProp(key, Number(e.target.value))}/> : (key === "color" || key === "background") ? <div className="color-field"><input aria-label={fieldLabels[key]} type="color" value={val} onChange={e => updateProp(key, e.target.value)}/><span>{val}</span></div> : <textarea rows={key === "text" ? 3 : 1} maxLength={5000} value={val} onChange={e => updateProp(key, e.target.value)}/>}</label>)}
             <div className="node-actions"><button onClick={duplicate}><Copy size={15}/> Duplicar</button><button className="danger" onClick={() => remove(selected)}><Trash2 size={15}/> Excluir</button></div>
             <div className="node-actions"><button onClick={() => move(project.nodes.findIndex(n => n.id === selected), -1)}><ChevronUp size={15}/> Subir</button><button onClick={() => move(project.nodes.findIndex(n => n.id === selected), 1)}><ChevronDown size={15}/> Descer</button></div>
           </> : <>

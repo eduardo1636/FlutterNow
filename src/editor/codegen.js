@@ -8,7 +8,7 @@ export function generateCode(project) {
     if (node.type === "input") return "      <input placeholder={" + escapeText(p.text) + "} style={{ width: '100%', padding: 12, borderRadius: " + Number(p.radius) + ", border: '1px solid #ddd' }} />";
     if (node.type === "card") return "      <div style={{ background: " + escapeText(p.background) + ", color: " + escapeText(p.color) + ", padding: 20, borderRadius: " + Number(p.radius) + " }}>" + "{"+escapeText(p.text)+"}" + "</div>";
     if (node.type === "image") return "      <img src={" + escapeText(p.text) + "} alt=\"Imagem\" style={{ width: '100%', borderRadius: " + Number(p.radius) + " }} />";
-    if (node.type === "divider") return "      <hr style={{ border: 0, borderTop: '1px solid " + p.background + "' }} />";
+    if (node.type === "divider") return "      <hr style={{ border: 0, borderTop: " + escapeText("1px solid " + p.background) + " }} />";
     if (node.type === "spacer") return "      <div style={{ height: " + Number(p.height) + " }} />";
     return "";
   });

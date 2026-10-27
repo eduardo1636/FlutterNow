@@ -42,4 +42,15 @@ describe("exportação React da versão inicial", () => {
   it("é determinístico para o mesmo documento", () => {
     expect(generateCode(initial)).toEqual(generateCode(initial));
   });
+  it("escapa valores injetados no estilo do divisor exportado", () => {
+    const malicious = "red' }} /> hacked <div";
+    const doc = {
+      ...initial,
+      nodes: [{ id: "divider", type: "divider", props: { background: malicious } }],
+    };
+    const output = generateCode(doc);
+    expect(output).toContain(JSON.stringify("1px solid " + malicious));
+    expect(output).not.toContain("borderTop: '1px solid " + malicious + "'");
+  });
+
 });

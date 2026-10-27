@@ -16,7 +16,7 @@ export const starter = [
   { id: "welcome-button", type: "button", props: { text: "Começar agora", background: "#6d5dfc", color: "#ffffff", radius: 12, fontSize: 15 } }
 ];
 export const initial = { name: "Meu aplicativo", nodes: starter, page: { background: "#ffffff", padding: 22, gap: 16 } };
-export function newId() { return typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random(); }
+export function newId() { return typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : "id-" + Date.now() + "-" + Math.random().toString(36).slice(2); }
 export function readProject() { try { const raw = localStorage.getItem(STORAGE); return raw ? parseProjectJSON(raw) : initial; } catch { return initial; } }
 
 
