@@ -52,6 +52,7 @@ function Children({ document, parentId, selectedId, onSelect, onDropItem, previe
             depth={depth + 1}
             device={device}
             tokens={tokens}
+            inRow={row}
           />
           <DropSlot parentId={parentId} index={index + 1} onDropItem={onDropItem} preview={preview} horizontal={row} />
         </React.Fragment>
@@ -63,13 +64,17 @@ function Children({ document, parentId, selectedId, onSelect, onDropItem, previe
   );
 }
 
-export function EditableNode({ document, nodeId, selectedId, onSelect, onDropItem, preview, depth, device, tokens }) {
+export function EditableNode({ document, nodeId, selectedId, onSelect, onDropItem, preview, depth, device, tokens, inRow = false }) {
   const node = document.nodes[nodeId];
   const layout = isLayout(node.type);
+  const customStyle = reactStyle(node, device, tokens);
+  const wrapperStyle = customStyle.width ? { width: customStyle.width,
+    ...(inRow ? { flex: `0 0 ${customStyle.width}` } : {}) } : undefined;
   return (
     <div
       className={"fn-item" + (selectedId === nodeId && !preview ? " is-selected" : "") + (layout ? " is-layout" : "")}
       data-node-id={nodeId}
+      style={wrapperStyle}
       draggable={!preview}
       onDragStart={(event) => {
         if (preview) return;
@@ -100,7 +105,7 @@ export function EditableNode({ document, nodeId, selectedId, onSelect, onDropIte
           />
         </div>
       ) : (
-        renderNode(node, reactStyle(node, device, tokens))
+        renderNode(node, customStyle)
       )}
     </div>
   );
