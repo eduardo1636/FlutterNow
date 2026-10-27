@@ -13,7 +13,7 @@ export default [
     },
     rules: {
       ...js.configs.recommended.rules,
-      "no-empty": ["error", { allowEmptyCatchClause: true }],
+      "no-empty": ["error", { allowEmptyCatch: true }],
       "no-unused-vars": ["error", { argsIgnorePattern: "^_", varsIgnorePattern: "^_" }]
     }
   }
