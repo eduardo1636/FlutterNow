@@ -20,7 +20,6 @@ export default function ResponsiveInspector({ node, device, tokens: projectToken
   const current = effectiveStyle(node, device, tokens);
   const fields = isLayout(node.type) ? LAYOUT_FIELDS :
     ["heading", "text"].includes(node.type) ? TEXT_FIELDS : BASE_FIELDS;
-  const breakpoint = device === "mobile" ? "base" : device;
   const fallback = DEFAULT_LAYOUT_STYLES[node.type] || {};
   function resolvedValue(key) {
     if (current[key] !== undefined) return current[key];
