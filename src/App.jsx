@@ -17,8 +17,8 @@ export default function App() {
   const project = useMemo(() => toLegacyProjection(document), [document]);
   const activePage = document.pages.find(page => page.id === document.activePageId);
   const rootId = activePage.rootId;
-  const hasNestedNodes = Object.values(document.nodes).some(node => 
-    CONTAINER_TYPES.has(node.type) && node.id !== rootId && node.children.length > 0);
+  const hasNestedNodes = document.pages.length > 1 || Object.values(document.nodes).some(node =>
+    CONTAINER_TYPES.has(node.type) && node.id !== rootId);
   const [selected, setSelected] = useState(null);
   const [device, setDevice] = useState("mobile");
   const [tab, setTab] = useState("editor");
@@ -108,7 +108,7 @@ export default function App() {
         <button title="Refazer" disabled={!session.future.length} onClick={redo}><Redo2 size={17}/></button>
         <span className="top-separator"/>
         <button onClick={() => { downloadFile("flutternow-project-v1.json", serializeDocument(document), "application/json"); setNotice("Projeto exportado!"); }}><FileJson size={16}/> <span>Projeto</span></button>
-        <button className="primary" disabled={hasNestedNodes} title={hasNestedNodes ? "Exportação aninhada será implementada no gerador completo" : "Exportar componente React"} onClick={() => { downloadFile("App.jsx", source, "text/javascript"); setNotice("Código React exportado!"); }}><Download size={16}/> Exportar código</button>
+        <button className="primary" disabled={hasNestedNodes} title={hasNestedNodes ? "Exportação de páginas e containers será implementada no gerador completo" : "Exportar componente React"} onClick={() => { downloadFile("App.jsx", source, "text/javascript"); setNotice("Código React exportado!"); }}><Download size={16}/> Exportar código</button>
       </div>
     </header>
     <div className="workspace">
