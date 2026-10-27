@@ -61,7 +61,7 @@ describe("F01: modelo de documentos", () => {
   it("não permite nomes especiais em IDs do mapa", () => {
     const doc = createDocument();
     const value = structuredClone(doc);
-    value.nodes["__proto__"] = makeNode("__proto__");
+    Object.defineProperty(value.nodes, "__proto__", { value: makeNode("__proto__"), enumerable: true, configurable: true });
     expect(() => assertDocument(value)).toThrow();
   });
 
