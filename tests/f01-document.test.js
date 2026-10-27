@@ -58,6 +58,12 @@ describe("F01: modelo de documentos", () => {
     expect(() => assertDocument(cycle)).toThrow(/pais duplicados|ciclo|Raiz/);
   });
 
+  it("rejeita documento v1 com props obrigatórias ausentes", () => {
+    const doc = fixtureTree();
+    doc.nodes.nestedText.props = {};
+    expect(() => assertDocument(doc)).toThrow(/Propriedade obrigatória/);
+  });
+
   it("não permite nomes especiais em IDs do mapa", () => {
     const doc = createDocument();
     const value = structuredClone(doc);
