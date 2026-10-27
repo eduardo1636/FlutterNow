@@ -1,5 +1,8 @@
 const STORAGE = "flutternow-project-v1";
 export const components = [
+  { type: "container", name: "Container", category: "Layout", defaults: {} },
+  { type: "row", name: "Linha", category: "Layout", defaults: {} },
+  { type: "column", name: "Coluna", category: "Layout", defaults: {} },
   { type: "heading", name: "Título", category: "Texto", defaults: { text: "Seu título aqui", fontSize: 28, color: "#151e32", align: "left" } },
   { type: "text", name: "Parágrafo", category: "Texto", defaults: { text: "Escreva uma descrição para sua página.", fontSize: 15, color: "#64748b", align: "left" } },
   { type: "button", name: "Botão", category: "Controles", defaults: { text: "Continuar", background: "#6d5dfc", color: "#ffffff", radius: 12, fontSize: 15 } },
