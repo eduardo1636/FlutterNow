@@ -20,6 +20,11 @@ jobs:
       # Substituir por npm ci após gerar e versionar o lockfile.
       - name: Instalar dependências
         run: npm install --no-audit --no-fund
+      - name: Registrar lockfile para bootstrap inicial
+        run: |
+          echo FLUTTERNOW_LOCK_BEGIN
+          cat package-lock.json
+          echo FLUTTERNOW_LOCK_END
       - name: Lint
         run: npm run lint
       - name: Verificação TypeScript
