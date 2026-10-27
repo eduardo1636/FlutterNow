@@ -1,10 +1,15 @@
 import { describe, expect, it } from "vitest";
 import { components, initial, parseProjectJSON } from "../src/editor/project.js";
+import legacyFixture from "./fixtures/legacy-v01.json";
 
 describe("leitura e compatibilidade do projeto v0.1", () => {
   it("preserva o projeto inicial após exportação/importação", () => {
     const restored = parseProjectJSON(JSON.stringify(initial));
     expect(restored).toEqual(initial);
+  });
+
+  it("importa a fixture independente v0.1 sem perda de dados", () => {
+    expect(parseProjectJSON(JSON.stringify(legacyFixture))).toEqual(legacyFixture);
   });
 
   it("reconhece os oito widgets legados", () => {
