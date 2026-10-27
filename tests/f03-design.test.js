@@ -95,7 +95,7 @@ describe("F03: design tokens e compatibilidade", () => {
     const node = createWidget("button", "button");
     node.styles.base = { background:"token:colorPrimary", radius:22 };
     const html = renderToStaticMarkup(renderNode(node, reactStyle(node,"mobile",DEFAULT_TOKENS)));
-    expect(html).toContain("background-color:rgb(109, 93, 252)");
+    expect(html).toContain("background-color:#6d5dfc");
     expect(html).toContain("border-radius:22px");
   });
 });
