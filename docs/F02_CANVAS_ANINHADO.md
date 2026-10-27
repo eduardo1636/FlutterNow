@@ -34,7 +34,7 @@ Se a branch já existir localmente, use \`git switch feat/f02-canvas-aninhado\` 
 Cenário manual de aceitação:
 
 1. Clique em **Linha** na paleta e confirme que surgiu no canvas.
-2. Selecione essa linha e clique em **Coluna** duas vezes. A linha deverá apresentar duas colunas.
+2. Selecione a linha e clique em **Coluna**; depois selecione a linha novamente na árvore e adicione uma segunda **Coluna**. A linha deverá apresentar duas colunas irmãs.
 3. Arraste **Título** para a primeira coluna e **Botão** para a segunda; confirme a presença na árvore.
 4. Selecione uma coluna e altere fundo, padding, espaçamento e arredondamento no inspector.
 5. Arraste o título para a segunda coluna, duplique o botão e reordene usando **Subir/Descer**.
