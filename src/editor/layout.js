@@ -1,4 +1,5 @@
 import { components } from "./project.js";
+import { effectiveStyle, reactStyle } from "./designSystem.js";
 
 export const LAYOUT_TYPES = ["container", "row", "column"];
 export const DEFAULT_LAYOUT_STYLES = {
@@ -23,11 +24,11 @@ export function createWidget(id, type) {
     children: [],
   };
 }
-export function getLayoutValues(node) {
-  return { ...(DEFAULT_LAYOUT_STYLES[node.type] ?? {}), ...node.styles.base };
+export function getLayoutValues(node, device = "mobile", tokens) {
+  return { ...(DEFAULT_LAYOUT_STYLES[node.type] ?? {}), ...effectiveStyle(node, device, tokens) };
 }
-export function getLayoutCSS(node) {
-  const style = getLayoutValues(node);
+export function getLayoutCSS(node, device = "mobile", tokens) {
+  const style = getLayoutValues(node, device, tokens);
   return {
     display: "flex",
     flexDirection: node.type === "row" ? "row" : "column",
@@ -36,6 +37,10 @@ export function getLayoutCSS(node) {
     backgroundColor: String(style.background || "transparent"),
     borderRadius: Number(style.radius) || 0,
     minHeight: Number(style.minHeight) || 0,
+    justifyContent: style.justifyContent || "flex-start",
+    alignItems: style.alignItems || "stretch",
+    flexWrap: style.flexWrap || "nowrap",
+    ...reactStyle(node, device, tokens),
   };
 }
 export function findParentInfo(document, nodeId) {
