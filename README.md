@@ -27,7 +27,7 @@ npm run build      # Build de produção
 A automação GitHub Actions executa essas verificações em pushes e pull requests.
 Confira [F00 — Estabilização](docs/F00_ESTABILIZACAO.md) e o [Plano Mestre](ROADMAP.md).
 
-> Aviso: a migração integral do JavaScript legado para TypeScript estrito está planejada para F01. Ainda falta gerar e versionar o `package-lock.json` para builds plenamente reproduzíveis.
+> Aviso: a migração integral do JavaScript legado para TypeScript estrito está planejada para F01. As dependências são travadas com `package-lock.json` e o CI utiliza `npm ci` para instalações reproduzíveis.
 
 ## Funcionalidades disponíveis
 
