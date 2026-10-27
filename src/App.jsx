@@ -127,6 +127,7 @@ export default function App() {
           <span className="resolution">{device === "mobile" ? "390 × 844" : device === "tablet" ? "768 × 1024" : "100%"} • Visualização</span>
           <div className="mode-picker"><button className={tab === "editor" ? "active" : ""} onClick={() => setTab("editor")}><MousePointer2 size={15}/> Editor</button><button className={tab === "code" ? "active" : ""} onClick={() => setTab("code")}><Code2 size={15}/> Código</button></div>
         </div>
+        {hasNestedNodes && <div role="status" className="compat-warning">Este projeto contém páginas ou containers aninhados. A versão F01 apresenta apenas os elementos do primeiro nível da página ativa. O conteúdo completo está preservado no JSON; a edição visual aninhada virá na F02.</div>}
         {tab === "editor" ? <div className="canvas-scroller">
           <div className={"device-shell " + device}>
             <div className="device-bar"><span/><span/><span/></div>
@@ -137,7 +138,7 @@ export default function App() {
             </div>
           </div>
           <div className="canvas-tip"><Sparkles size={14}/> Selecione um elemento para editar suas propriedades</div>
-        </div> : <div className="code-panel"><div className="code-heading"><span>src/App.jsx</span><button onClick={() => navigator.clipboard.writeText(source).then(() => setNotice("Código copiado!"))}><Copy size={15}/> Copiar</button></div><pre><code>{source}</code></pre></div>}
+        </div> : <div className="code-panel"><div className="code-heading"><span>src/App.jsx</span>{!hasNestedNodes && <button onClick={() => navigator.clipboard.writeText(source).then(() => setNotice("Código copiado!"))}><Copy size={15}/> Copiar</button>}</div>{hasNestedNodes ? <div className="code-unavailable">A geração completa de código React para projetos com páginas ou containers aninhados chegará na F07. Exporte o JSON para manter todas as informações.</div> : <pre><code>{source}</code></pre>}</div>}
       </section>
       <aside className="sidebar properties-panel">
         <div className="panel-heading"><span><SlidersHorizontal size={16}/> Propriedades</span></div>
