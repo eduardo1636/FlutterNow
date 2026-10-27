@@ -24,7 +24,7 @@ Teste manual: adicione e arraste componentes; altere propriedades; use desfazer/
 
 ## Limitações e decisões pendentes
 - A migração integral para TypeScript estrito dos componentes e do modelo está prevista em F01. A configuração F00 usa `allowJs` e `checkJs: false`, portanto o comando typecheck ainda não valida estritamente os arquivos JavaScript legados.
-- Ainda falta um `package-lock.json` gerado por instalação com rede. Até sua inclusão, a CI usa `npm install` e pode resolver versões permitidas diferentes. Após a primeira instalação local, versionar o lockfile e migrar CI para `npm ci`.
+- O `package-lock.json` foi gerado na instalação limpa do GitHub Actions e está versionado. A CI utiliza `npm ci`.
 - Como o ambiente de criação não consegue acessar o registro npm, os testes de instalação, lint, build e Vitest devem ser confirmados pela CI e/ou máquina local antes do merge.
 - O formato JSON sem `schemaVersion` é aceito apenas como compatibilidade legada. A próxima fase introduzirá o documento versionado e migrações.
 - O código exportado ainda é um componente `App.jsx`, não um projeto completo.
