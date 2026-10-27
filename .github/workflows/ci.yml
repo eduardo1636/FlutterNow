@@ -16,15 +16,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
-      # Enquanto não houver package-lock.json, npm install é necessário.
-      # Substituir por npm ci após gerar e versionar o lockfile.
       - name: Instalar dependências
-        run: npm install --no-audit --no-fund
-      - name: Registrar lockfile para bootstrap inicial
-        run: |
-          echo FLUTTERNOW_LOCK_BEGIN
-          cat package-lock.json
-          echo FLUTTERNOW_LOCK_END
+        run: npm ci --no-audit --no-fund
       - name: Lint
         run: npm run lint
       - name: Verificação TypeScript
