@@ -13,6 +13,7 @@ export default function App() {
   const [bootstrap] = useState(() => loadStoredDocument(localStorage));
   const [session, setSession] = useState(() => createSession(bootstrap.document));
   const [storageLocked, setStorageLocked] = useState(bootstrap.locked);
+  const [saveFailed, setSaveFailed] = useState(bootstrap.locked);
   const document = session.present;
   const project = useMemo(() => toLegacyProjection(document), [document]);
   const activePage = document.pages.find(page => page.id === document.activePageId);
@@ -28,8 +29,8 @@ export default function App() {
   const source = useMemo(() => generateCode(project), [project]);
   useEffect(() => {
     if (storageLocked) return;
-    try { saveStoredDocument(localStorage, document); }
-    catch { setNotice("Falha ao salvar! Exporte um backup JSON do projeto."); }
+    try { saveStoredDocument(localStorage, document); setSaveFailed(false); }
+    catch { setSaveFailed(true); setNotice("Falha ao salvar! Exporte um backup JSON do projeto."); }
   }, [document, storageLocked]);
   function commit(command) {
     setSession(current => reduceSession(current, { type: "commit", command }));
@@ -102,7 +103,7 @@ export default function App() {
   return <div className="app-shell">
     <header className="topbar">
       <div className="brand"><div className="brand-logo"><Blocks size={19}/></div><span>Flutter<span className="brand-accent">Now</span></span><span className="version">BETA</span></div>
-      <div className="project-name"><input aria-label="Nome do projeto" value={project.name} onChange={e => commit({ type: "setName", value: e.target.value })}/><span className="saved"><Save size={13}/> Salvo automaticamente</span></div>
+      <div className="project-name"><input aria-label="Nome do projeto" value={project.name} maxLength={200} onChange={e => commit({ type: "setName", value: e.target.value })}/><span className="saved"><Save size={13}/> {storageLocked ? "Modo protegido — importe um backup" : saveFailed ? "Falha ao salvar — faça backup" : "Salvo automaticamente"}</span></div>
       <div className="top-actions">
         <button title="Desfazer" disabled={!session.past.length} onClick={undo}><Undo2 size={17}/></button>
         <button title="Refazer" disabled={!session.future.length} onClick={redo}><Redo2 size={17}/></button>
@@ -143,7 +144,7 @@ export default function App() {
         <div className="sidebar-scroller">
           {selectedNode ? <>
             <div className="inspector-title"><span>{components.find(c => c.type === selectedNode.type)?.name}</span><span className="muted">Elemento</span></div>
-            {Object.entries(selectedNode.props).map(([key, val]) => <label className="property-field" key={key}><span>{fieldLabels[key] || key}</span>{key === "align" ? <select value={val} onChange={e => updateProp(key, e.target.value)}><option value="left">Esquerda</option><option value="center">Centro</option><option value="right">Direita</option></select> : typeof val === "number" ? <input type="number" min="0" max="300" value={val} onChange={e => updateProp(key, Number(e.target.value))}/> : (key === "color" || key === "background") ? <div className="color-field"><input aria-label={fieldLabels[key]} type="color" value={val} onChange={e => updateProp(key, e.target.value)}/><span>{val}</span></div> : <textarea rows={key === "text" ? 3 : 1} value={val} onChange={e => updateProp(key, e.target.value)}/>}</label>)}
+            {Object.entries(selectedNode.props).map(([key, val]) => <label className="property-field" key={key}><span>{fieldLabels[key] || key}</span>{key === "align" ? <select value={val} onChange={e => updateProp(key, e.target.value)}><option value="left">Esquerda</option><option value="center">Centro</option><option value="right">Direita</option></select> : typeof val === "number" ? <input type="number" min="0" max="300" value={val} onChange={e => updateProp(key, Number(e.target.value))}/> : (key === "color" || key === "background") ? <div className="color-field"><input aria-label={fieldLabels[key]} type="color" value={val} onChange={e => updateProp(key, e.target.value)}/><span>{val}</span></div> : <textarea rows={key === "text" ? 3 : 1} maxLength={5000} value={val} onChange={e => updateProp(key, e.target.value)}/>}</label>)}
             <div className="node-actions"><button onClick={duplicate}><Copy size={15}/> Duplicar</button><button className="danger" onClick={() => remove(selected)}><Trash2 size={15}/> Excluir</button></div>
             <div className="node-actions"><button onClick={() => move(project.nodes.findIndex(n => n.id === selected), -1)}><ChevronUp size={15}/> Subir</button><button onClick={() => move(project.nodes.findIndex(n => n.id === selected), 1)}><ChevronDown size={15}/> Descer</button></div>
           </> : <>
