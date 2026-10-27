@@ -1,57 +1,11 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { Blocks, Smartphone, Tablet, Monitor, Save, Download, Code2, Eye, Undo2, Redo2, Trash2, Copy, Plus, GripVertical, ChevronUp, ChevronDown, Layers, SlidersHorizontal, MousePointer2, FileJson, Upload, Sparkles } from "lucide-react";
+import { Blocks, Smartphone, Tablet, Monitor, Save, Download, Code2, Undo2, Redo2, Trash2, Copy, Plus, GripVertical, ChevronUp, ChevronDown, Layers, SlidersHorizontal, MousePointer2, FileJson, Upload, Sparkles } from "lucide-react";
 
-const STORAGE = "flutternow-project-v1";
-const components = [
-  { type: "heading", name: "Título", category: "Texto", defaults: { text: "Seu título aqui", fontSize: 28, color: "#151e32", align: "left" } },
-  { type: "text", name: "Parágrafo", category: "Texto", defaults: { text: "Escreva uma descrição para sua página.", fontSize: 15, color: "#64748b", align: "left" } },
-  { type: "button", name: "Botão", category: "Controles", defaults: { text: "Continuar", background: "#6d5dfc", color: "#ffffff", radius: 12, fontSize: 15 } },
-  { type: "input", name: "Campo de texto", category: "Controles", defaults: { text: "Digite aqui...", radius: 10, background: "#ffffff", color: "#475569" } },
-  { type: "card", name: "Cartão", category: "Layout", defaults: { text: "Um cartão informativo", background: "#f1f5ff", color: "#253457", radius: 16, fontSize: 16 } },
-  { type: "image", name: "Imagem", category: "Mídia", defaults: { text: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=900", radius: 14 } },
-  { type: "divider", name: "Divisor", category: "Layout", defaults: { background: "#dce3ef" } },
-  { type: "spacer", name: "Espaçamento", category: "Layout", defaults: { height: 24 } }
-];
-const starter = [
-  { id: "welcome-title", type: "heading", props: { text: "Crie algo incrível.", fontSize: 30, color: "#161f38", align: "left" } },
-  { id: "welcome-body", type: "text", props: { text: "Arraste componentes para este espaço e personalize cada detalhe.", fontSize: 15, color: "#64748b", align: "left" } },
-  { id: "welcome-card", type: "card", props: { text: "✨ Sua próxima grande ideia começa aqui.", background: "#eeedff", color: "#4d43ad", radius: 16, fontSize: 16 } },
-  { id: "welcome-button", type: "button", props: { text: "Começar agora", background: "#6d5dfc", color: "#ffffff", radius: 12, fontSize: 15 } }
-];
-const initial = { name: "Meu aplicativo", nodes: starter, page: { background: "#ffffff", padding: 22, gap: 16 } };
-function newId() { return crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random(); }
-function readProject() { try { const data = JSON.parse(localStorage.getItem(STORAGE)); if (data && Array.isArray(data.nodes) && data.page) return data; } catch {} return initial; }
-function renderNode(node) {
-  const p = node.props;
-  if (node.type === "heading") return <h2 style={{ fontSize: p.fontSize, color: p.color, textAlign: p.align, margin: 0, lineHeight: 1.25 }}>{p.text}</h2>;
-  if (node.type === "text") return <p style={{ fontSize: p.fontSize, color: p.color, textAlign: p.align, margin: 0, lineHeight: 1.6 }}>{p.text}</p>;
-  if (node.type === "button") return <button type="button" style={{ background: p.background, color: p.color, borderRadius: p.radius, fontSize: p.fontSize, padding: "13px 18px", border: "none", fontWeight: 650, width: "100%", cursor: "default" }}>{p.text}</button>;
-  if (node.type === "input") return <input value="" placeholder={p.text} readOnly style={{ width: "100%", border: "1px solid #e2e8f0", padding: 13, borderRadius: p.radius, background: p.background, color: p.color, boxSizing: "border-box" }}/>;
-  if (node.type === "card") return <div style={{ background: p.background, color: p.color, borderRadius: p.radius, fontSize: p.fontSize, padding: 20, lineHeight: 1.5 }}>{p.text}</div>;
-  if (node.type === "image") return <img alt="Imagem do projeto" src={p.text} style={{ display: "block", width: "100%", maxHeight: 240, objectFit: "cover", borderRadius: p.radius }} onError={event => { event.currentTarget.style.opacity = "0.2"; }}/>;
-  if (node.type === "divider") return <div style={{ height: 1, background: p.background }}/>;
-  if (node.type === "spacer") return <div style={{ height: p.height }}/>;
-  return null;
-}
-function escapeText(t) { return JSON.stringify(String(t ?? "")); }
-function styleObject(props) { return JSON.stringify(props); }
-function generateCode(project) {
-  const parts = project.nodes.map(node => {
-    const p = node.props;
-    if (node.type === "heading") return "      <h2 style={{ fontSize: " + Number(p.fontSize) + ", color: " + escapeText(p.color) + ", textAlign: " + escapeText(p.align) + " }}>" + "{"+escapeText(p.text)+"}" + "</h2>";
-    if (node.type === "text") return "      <p style={{ fontSize: " + Number(p.fontSize) + ", color: " + escapeText(p.color) + ", textAlign: " + escapeText(p.align) + " }}>" + "{"+escapeText(p.text)+"}" + "</p>";
-    if (node.type === "button") return "      <button type=\"button\" style={{ background: " + escapeText(p.background) + ", color: " + escapeText(p.color) + ", borderRadius: " + Number(p.radius) + ", padding: 14, border: 'none', width: '100%' }}>" + "{"+escapeText(p.text)+"}" + "</button>";
-    if (node.type === "input") return "      <input placeholder={" + escapeText(p.text) + "} style={{ width: '100%', padding: 12, borderRadius: " + Number(p.radius) + ", border: '1px solid #ddd' }} />";
-    if (node.type === "card") return "      <div style={{ background: " + escapeText(p.background) + ", color: " + escapeText(p.color) + ", padding: 20, borderRadius: " + Number(p.radius) + " }}>" + "{"+escapeText(p.text)+"}" + "</div>";
-    if (node.type === "image") return "      <img src={" + escapeText(p.text) + "} alt=\"Imagem\" style={{ width: '100%', borderRadius: " + Number(p.radius) + " }} />";
-    if (node.type === "divider") return "      <hr style={{ border: 0, borderTop: '1px solid " + p.background + "' }} />";
-    if (node.type === "spacer") return "      <div style={{ height: " + Number(p.height) + " }} />";
-    return "";
-  });
-  return "import React from 'react';\n\nexport default function App() {\n  return (\n    <main style={{ maxWidth: 960, minHeight: '100vh', margin: '0 auto', boxSizing: 'border-box', background: " + escapeText(project.page.background) + ", padding: " + Number(project.page.padding) + ", display: 'flex', flexDirection: 'column', gap: " + Number(project.page.gap) + " }}>\n" + parts.join("\n") + "\n    </main>\n  );\n}\n";
-}
-function downloadFile(filename, text, mime) { const url = URL.createObjectURL(new Blob([text], { type: mime })); const a = document.createElement("a"); a.href = url; a.download = filename; a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000); }
-const fieldLabels = { text: "Conteúdo / URL", background: "Cor de fundo", color: "Cor do texto", radius: "Arredondamento", fontSize: "Tamanho da fonte", height: "Altura", align: "Alinhamento" };
+import { components, fieldLabels, newId, readProject, parseProjectJSON } from "./editor/project.js";
+import { renderNode } from "./editor/PreviewNode.jsx";
+import { generateCode } from "./editor/codegen.js";
+import { downloadFile } from "./editor/download.js";
+
 export default function App() {
   const [project, setProject] = useState(readProject);
   const [selected, setSelected] = useState(null);
@@ -63,7 +17,7 @@ export default function App() {
   const importRef = useRef(null);
   const selectedNode = project.nodes.find(n => n.id === selected);
   const source = useMemo(() => generateCode(project), [project]);
-  useEffect(() => { localStorage.setItem(STORAGE, JSON.stringify(project)); }, [project]);
+  useEffect(() => { try { localStorage.setItem("flutternow-project-v1", JSON.stringify(project)); } catch { setNotice("Não foi possível salvar no navegador. Exporte um backup JSON."); } }, [project]);
   function commit(mutator) {
     history.current.push(structuredClone(project));
     if (history.current.length > 60) history.current.shift();
@@ -88,8 +42,7 @@ export default function App() {
     const file = event.target.files?.[0]; if (!file) return;
     file.text().then(value => {
       try {
-        const data = JSON.parse(value);
-        if (!data || !Array.isArray(data.nodes) || !data.page || typeof data.name !== "string" || data.nodes.some(n => !components.some(c => c.type === n.type) || !n.props || typeof n.id !== "string")) throw Error("Formato incompatível");
+        const data = parseProjectJSON(value);
         commit(() => ({ name: data.name, nodes: data.nodes, page: data.page })); setSelected(null); setNotice("Projeto importado!");
       } catch { setNotice("Arquivo inválido."); }
       event.target.value = "";
