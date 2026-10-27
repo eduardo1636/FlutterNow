@@ -53,7 +53,6 @@ export default function App() {
   const rootId = activePage.rootId;
   const selectedNode = selected ? document.nodes[selected] : null;
   const parentInfo = selectedNode ? findParentInfo(document, selected) : null;
-  const childrenInRoot = document.nodes[rootId].children;
   const hasNestedNodes = document.pages.length > 1 ||
     Object.values(document.nodes).some(node => isLayout(node.type) && node.id !== rootId);
   const source = useMemo(() => hasNestedNodes ? null : generateCode(toLegacyProjection(document)),
@@ -202,7 +201,8 @@ export default function App() {
 
   const categories = [...new Set(components.map(c => c.category))];
   const availableParents = Object.values(document.nodes).filter(n =>
-    isLayout(n.type) && (!selectedNode || !containsNode(document, selected, n.id)));
+    isLayout(n.type) && containsNode(document, rootId, n.id) &&
+    (!selectedNode || !containsNode(document, selected, n.id)));
   const layout = selectedNode && isLayout(selectedNode.type);
   const layoutStyle = layout ? getLayoutValues(selectedNode) : null;
   const sizeLabel = device === "mobile" ? "390 px" : device === "tablet" ? "768 px" : "Tela ampla";
