@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import fixture from "./fixtures/legacy-v01.json";
 import {
   assertDocument, createDocument, migrateLegacy, parseDocumentJSON,
-  serializeDocument, toLegacyProjection, nodeFromLegacy, SCHEMA_VERSION,
+  serializeDocument, toLegacyProjection, SCHEMA_VERSION,
   CURRENT_STORAGE_KEY, LEGACY_STORAGE_KEY, LEGACY_BACKUP_KEY,
 } from "../src/core/document";
 import { applyCommand } from "../src/core/commands";
