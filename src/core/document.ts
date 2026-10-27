@@ -1,11 +1,11 @@
-import { initial, parseProjectJSON, newId } from "../editor/project.js";
+import { initial, parseProjectJSON, newId, components } from "../editor/project.js";
 
 /** Versioned document, shared by editor commands, persistence and future exporters. */
 export const SCHEMA_VERSION = 1;
 export const CURRENT_STORAGE_KEY = "flutternow-project-v2";
 export const LEGACY_STORAGE_KEY = "flutternow-project-v1";
 export const LEGACY_BACKUP_KEY = "flutternow-backup-v01";
-export const MAX_NODES = 1500;
+export const MAX_NODES = 2000;
 export const MAX_DEPTH = 32;
 export const CONTAINER_TYPES = new Set(["column", "row", "container"]);
 export const COMPONENT_TYPES = new Set([
@@ -13,7 +13,6 @@ export const COMPONENT_TYPES = new Set([
   "spacer", ...CONTAINER_TYPES,
 ]);
 const ID_RE = /^[\w-]{1,128}$/;
-const PROPS = ["text", "fontSize", "color", "align", "background", "radius", "height"];
 const MAX_STRING = 5000;
 
 export type PropValue = string | number | boolean;
@@ -109,6 +108,16 @@ export function validateDocument(raw: unknown): asserts raw is ProjectDocument {
     assert(record(value) && value.id === id &&
       typeof value.type === "string" && COMPONENT_TYPES.has(value.type), "Nó inválido");
     safeMap(value.props, "Propriedades");
+    const definition = (components as Array<{
+      type: string; defaults: Record<string, PropValue>
+    }>).find(component => component.type === value.type);
+    if (definition) {
+      for (const [key, defaultValue] of Object.entries(definition.defaults)) {
+        assert(Object.prototype.hasOwnProperty.call(value.props, key) &&
+          typeof value.props[key] === typeof defaultValue,
+          "Propriedade obrigatória incompatível: " + key);
+      }
+    }
     assert(record(value.styles), "Estilos inválidos");
     for (const key of Object.keys(value.styles)) {
       assert(["base", "tablet", "desktop"].includes(key), "Breakpoint desconhecido");
