@@ -11,7 +11,7 @@ import { loadStoredDocument, saveStoredDocument } from "../src/core/persistence"
 
 const makeNode = (id, type = "text") => ({
   id, type,
-  props: type === "text" ? { text: id } : {},
+  props: type === "text" ? { text: id, fontSize: 15, color: "#64748b", align: "left" } : {},
   styles: { base: {} },
   children: [],
 });
