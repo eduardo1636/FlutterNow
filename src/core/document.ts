@@ -57,7 +57,7 @@ function record(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === "object" && !Array.isArray(value);
 }
 function checkId(id: unknown): asserts id is string {
-  assert(typeof id === "string" && ID_RE.test(id), "Identificador inválido");
+  assert(typeof id === "string" && ID_RE.test(id) && !["__proto__", "constructor", "prototype"].includes(id), "Identificador inválido");
 }
 function safeValue(value: unknown): value is PropValue {
   return typeof value === "boolean" ||
