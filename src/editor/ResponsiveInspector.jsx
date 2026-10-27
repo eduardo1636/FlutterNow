@@ -2,7 +2,7 @@ import React from "react";
 import { Link2, RotateCcw, Smartphone, Tablet, Monitor } from "lucide-react";
 import {
   COLOR_TOKEN_KEYS, DEFAULT_TOKENS, STYLE_FIELD_MAP,
-  TOKEN_LABELS, TOKEN_REF_PREFIX, effectiveStyle,
+  TOKEN_LABELS, TOKEN_REF_PREFIX, breakpointCascade, effectiveStyle,
   mergedTokens, resolveToken,
 } from "./designSystem.js";
 import { DEFAULT_LAYOUT_STYLES, isLayout } from "./layout.js";
@@ -55,9 +55,11 @@ export default function ResponsiveInspector({ node, device, tokens: projectToken
       {fields.map(key => {
         const field = STYLE_FIELD_MAP[key];
         const raw = styles[key];
+        const inheritedRaw = breakpointCascade(node, device)[key];
         const own = raw !== undefined;
         const value = resolvedValue(key);
-        const ref = typeof raw === "string" && raw.startsWith(TOKEN_REF_PREFIX) ? raw : "";
+        const ref = typeof inheritedRaw === "string" && inheritedRaw.startsWith(TOKEN_REF_PREFIX)
+          ? inheritedRaw : "";
         const permittedTokens = field.type === "color" ? COLOR_TOKEN_KEYS :
           field.type === "number" ? Object.keys(DEFAULT_TOKENS).filter(k => typeof DEFAULT_TOKENS[k] === "number") : [];
         return <div key={key} className={"fn-responsive-property" + (own ? " modified" : "")}>
