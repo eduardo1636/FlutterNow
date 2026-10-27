@@ -1,0 +1,30 @@
+name: FlutterNow CI
+
+on:
+  push:
+    branches: [main, "feat/**"]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validation:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      # Enquanto não houver package-lock.json, npm install é necessário.
+      # Substituir por npm ci após gerar e versionar o lockfile.
+      - name: Instalar dependências
+        run: npm install --no-audit --no-fund
+      - name: Lint
+        run: npm run lint
+      - name: Verificação TypeScript
+        run: npm run typecheck
+      - name: Testes
+        run: npm test
+      - name: Compilação
+        run: npm run build
