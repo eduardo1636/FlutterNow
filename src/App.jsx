@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   Blocks, Smartphone, Tablet, Monitor, Save, Download, Code2, Eye, Undo2, Redo2,
   Trash2, Copy, Plus, GripVertical, ChevronUp, ChevronDown, Layers, SlidersHorizontal,
-  MousePointer2, FileJson, Upload, Sparkles, ZoomIn, ZoomOut, Box, FolderTree,
+  MousePointer2, FileJson, Upload, Sparkles, ZoomIn, ZoomOut, Palette, FolderTree,
 } from "lucide-react";
 
 import { components, fieldLabels, newId } from "./editor/project.js";
@@ -12,10 +12,13 @@ import { parseDocumentJSON, serializeDocument, toLegacyProjection } from "./core
 import { generateCode } from "./editor/codegen.js";
 import { downloadFile } from "./editor/download.js";
 import {
-  createWidget, isLayout, componentName, getLayoutValues, findParentInfo, containsNode,
+  createWidget, isLayout, componentName, findParentInfo, containsNode,
 } from "./editor/layout.js";
 import CanvasTree from "./editor/canvas/CanvasTree.jsx";
 import LayerTree from "./editor/canvas/LayerTree.jsx";
+import DesignPanel from "./editor/DesignPanel.jsx";
+import ResponsiveInspector from "./editor/ResponsiveInspector.jsx";
+import { mergedTokens, hasStyleOverrides, hasCustomizedTokens } from "./editor/designSystem.js";
 
 const clamp = (value, min, max) => Math.max(min, Math.min(max, Number(value) || 0));
 const isEditingInput = (target) =>
@@ -53,10 +56,12 @@ export default function App() {
   const rootId = activePage.rootId;
   const selectedNode = selected ? document.nodes[selected] : null;
   const parentInfo = selectedNode ? findParentInfo(document, selected) : null;
+  const tokens = useMemo(() => mergedTokens(document), [document]);
   const hasNestedNodes = document.pages.length > 1 ||
     Object.values(document.nodes).some(node => isLayout(node.type) && node.id !== rootId);
-  const source = useMemo(() => hasNestedNodes ? null : generateCode(toLegacyProjection(document)),
-    [document, hasNestedNodes]);
+  const requiresModernExporter = hasNestedNodes || hasStyleOverrides(document) || hasCustomizedTokens(document);
+  const source = useMemo(() => requiresModernExporter ? null : generateCode(toLegacyProjection(document)),
+    [document, requiresModernExporter]);
   const ancestors = selected ? ancestorsOf(document, selected, rootId) : [];
 
   useEffect(() => {
@@ -105,7 +110,19 @@ export default function App() {
     if (selectedNode) commit({ type: "setProp", nodeId: selected, key, value });
   }
   function updateStyle(key, value) {
-    if (selectedNode) commit({ type: "setStyle", nodeId: selected, breakpoint: "base", key, value });
+    if (selectedNode) commit({ type: "setStyle", nodeId: selected,
+      breakpoint: device === "mobile" ? "base" : device, key, value });
+  }
+  function resetStyles() {
+    if (!selectedNode) return;
+    const breakpoint = device === "mobile" ? "base" : device;
+    const existing = selectedNode.styles[breakpoint] || {};
+    const commands = Object.keys(existing).map(key => ({ type: "setStyle",
+      nodeId: selected, breakpoint, key, value: null }));
+    if (commands.length) commit({ type: "batch", commands });
+  }
+  function updateToken(key, value) {
+    commit({ type: "setToken", key, value });
   }
   function updatePage(key, value) {
     const normalized = key === "background" ? value : clamp(value, 0, 300);
@@ -204,7 +221,6 @@ export default function App() {
     isLayout(n.type) && containsNode(document, rootId, n.id) &&
     (!selectedNode || !containsNode(document, selected, n.id)));
   const layout = selectedNode && isLayout(selectedNode.type);
-  const layoutStyle = layout ? getLayoutValues(selectedNode) : null;
   const sizeLabel = device === "mobile" ? "390 px" : device === "tablet" ? "768 px" : "Tela ampla";
 
   return (
@@ -229,7 +245,7 @@ export default function App() {
             downloadFile("flutternow-projeto.json", serializeDocument(document), "application/json");
             setNotice("Backup JSON exportado.");
           }}><FileJson size={16} /> <span>Projeto</span></button>
-          <button className="primary" disabled={Boolean(hasNestedNodes)} title={hasNestedNodes ?
+          <button className="primary" disabled={Boolean(requiresModernExporter)} title={requiresModernExporter ?
             "Exportador de layouts aninhados estará disponível em etapa posterior" : "Exportar componente React"}
             onClick={() => { if (source) downloadFile("App.jsx", source, "text/javascript"); }}>
             <Download size={16} /> Exportar código
@@ -245,6 +261,9 @@ export default function App() {
             </button>
             <button className={sideTab === "layers" ? "current" : ""} onClick={() => setSideTab("layers")}>
               <FolderTree size={15} /> Árvore
+            </button>
+            <button className={sideTab === "design" ? "current" : ""} onClick={() => setSideTab("design")}>
+              <Palette size={15} /> Design
             </button>
           </div>
           <div className="sidebar-scroller">
@@ -271,11 +290,11 @@ export default function App() {
                 </button>
                 <input ref={importRef} type="file" hidden accept=".json,application/json" onChange={importProject} />
               </div>
-            </> : <>
+            </> : sideTab === "layers" ? <>
               <p className="helper">Clique para selecionar. Arraste componentes para reorganizar. Solte sobre o ícone de um container para movê-lo para dentro.</p>
               <LayerTree document={document} rootId={rootId} selectedId={selected} onSelect={select}
                 onDropItem={onDropItem} collapsed={collapsed} toggle={toggleCollapsed} />
-            </>}
+            </> : <DesignPanel document={document} onToken={updateToken} onBatch={commit} />}
           </div>
         </aside>
 
@@ -308,7 +327,8 @@ export default function App() {
                 <div className={"device-shell " + device}>
                   <div className="device-bar"><span /><span /><span /></div>
                   <CanvasTree document={document} page={activePage} selectedId={selected}
-                    onSelect={select} onDropItem={onDropItem} preview={mode === "preview"} />
+                    onSelect={select} onDropItem={onDropItem} preview={mode === "preview"}
+                    device={device} tokens={tokens} />
                 </div>
               </div>
               <div className="canvas-tip"><Sparkles size={14} />
@@ -319,11 +339,11 @@ export default function App() {
           ) : (
             <div className="code-panel">
               <div className="code-heading"><span>src/App.jsx</span>
-                {!hasNestedNodes && <button onClick={() => navigator.clipboard.writeText(source).then(() => setNotice("Código copiado!")).catch(() => setNotice("Não foi possível copiar."))}><Copy size={15} /> Copiar</button>}
+                {!requiresModernExporter && <button onClick={() => navigator.clipboard.writeText(source).then(() => setNotice("Código copiado!")).catch(() => setNotice("Não foi possível copiar."))}><Copy size={15} /> Copiar</button>}
               </div>
-              {hasNestedNodes ?
+              {requiresModernExporter ?
                 <div className="code-unavailable">O documento completo está disponível no botão <strong>Projeto</strong>.
-                  O gerador de React atual não suporta containers aninhados; a exportação completa estará na F07.</div> :
+                  O gerador React atual não contempla todos os recursos de layout, responsividade e tokens; a exportação completa estará na F07.</div> :
                 <pre><code>{source}</code></pre>}
             </div>
           )}
@@ -340,28 +360,8 @@ export default function App() {
                 </React.Fragment>)}
               </div>
               <div className="inspector-title"><span>{componentName(selectedNode.type)}</span><span className="muted">Elemento</span></div>
-              {layout ? <>
-                <div className="fn-layout-title"><Box size={16} /> Layout {selectedNode.type === "row" ? "horizontal" : "vertical"}</div>
-                {["gap", "padding", "radius", "minHeight"].map(key => (
-                  <label className="property-field" key={key}><span>{{
-                    gap: "Espaçamento interno entre filhos",
-                    padding: "Preenchimento (padding)",
-                    radius: "Arredondamento",
-                    minHeight: "Altura mínima",
-                  }[key]} (px)</span>
-                    <input type="number" min="0" max="300" value={layoutStyle[key]}
-                      onChange={event => updateStyle(key, clamp(event.target.value, 0, 300))} />
-                  </label>
-                ))}
-                <label className="property-field"><span>Cor de fundo</span>
-                  <div className="color-field">
-                    <input type="color" value={layoutStyle.background}
-                      onChange={event => updateStyle("background", event.target.value)} />
-                    <span>{layoutStyle.background}</span>
-                  </div>
-                </label>
-                <div className="hint-box"><Layers size={17} /> Contém {selectedNode.children.length} componente(s). Arraste para a área indicada para adicionar mais.</div>
-              </> : Object.entries(selectedNode.props).map(([key, value]) => (
+              {layout && <div className="hint-box"><Layers size={17} /> Contém {selectedNode.children.length} componente(s). Use os estilos responsivos abaixo para ajustar o layout.</div>}
+              {!layout && Object.entries(selectedNode.props).map(([key, value]) => (
                 <label className="property-field" key={key}>
                   <span>{fieldLabels[key] || key}</span>
                   {key === "align" ? (
@@ -380,6 +380,8 @@ export default function App() {
                   )}
                 </label>
               ))}
+              <ResponsiveInspector node={selectedNode} device={device} tokens={tokens}
+                onStyle={updateStyle} onReset={resetStyles} />
               {parentInfo && <label className="property-field"><span>Container pai</span>
                 <select value={parentInfo.id} onChange={event => moveToParent(event.target.value)}>
                   {availableParents.map(n => <option key={n.id} value={n.id}>{n.id === rootId ? "Raiz da página" : componentName(n.type) + " • " + n.id.slice(0, 8)}</option>)}
