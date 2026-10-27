@@ -3,6 +3,7 @@ import {
   type ProjectDocument, type ProjectPage, type PropValue, type WidgetNode,
 } from "./document";
 import { newId } from "../editor/project.js";
+import { DEFAULT_TOKENS, tokenIsValid, validateStyleEntry } from "../editor/designSystem.js";
 
 /** Commands are deterministic except duplicate (where IDs are generated once before validation).
  * The document is never mutated when a command fails.
@@ -14,6 +15,7 @@ export type Command =
   | { type: "duplicate"; nodeId: string; newId: string }
   | { type: "setProp"; nodeId: string; key: string; value: PropValue }
   | { type: "setStyle"; nodeId: string; breakpoint: "base" | "tablet" | "desktop"; key: string; value: PropValue | null }
+  | { type: "setToken"; key: string; value: PropValue }
   | { type: "setPageStyle"; pageId: string; key: "background" | "padding" | "gap"; value: string | number }
   | { type: "setName"; value: string }
   | { type: "replace"; document: ProjectDocument }
@@ -153,12 +155,17 @@ function applyMutable(document: ProjectDocument, command: Command): ProjectDocum
     }
     case "setStyle": {
       checkKey(command.key);
-      if (command.value !== null && !safeValue(command.value)) throw new Error("Valor de estilo inválido");
+      if (!validateStyleEntry(command.key, command.value)) throw new Error("Valor de estilo inválido");
       const node = requireNode(document, command.nodeId);
       const style = node.styles[command.breakpoint] ?? {};
       if (command.value === null) delete style[command.key];
       else style[command.key] = command.value;
       node.styles[command.breakpoint] = style;
+      return document;
+    }
+    case "setToken": {
+      if (!tokenIsValid(command.key, command.value)) throw new Error("Valor do token inválido");
+      document.tokens = { ...DEFAULT_TOKENS, ...(document.tokens || {}), [command.key]: command.value };
       return document;
     }
     case "setPageStyle": {
