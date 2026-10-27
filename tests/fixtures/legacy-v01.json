@@ -1,0 +1,52 @@
+{
+  "name": "Projeto legado de teste",
+  "nodes": [
+    {
+      "id": "welcome-title",
+      "type": "heading",
+      "props": {
+        "text": "Crie algo incrível.",
+        "fontSize": 30,
+        "color": "#161f38",
+        "align": "left"
+      }
+    },
+    {
+      "id": "welcome-body",
+      "type": "text",
+      "props": {
+        "text": "Arraste componentes para este espaço e personalize cada detalhe.",
+        "fontSize": 15,
+        "color": "#64748b",
+        "align": "left"
+      }
+    },
+    {
+      "id": "welcome-card",
+      "type": "card",
+      "props": {
+        "text": "✨ Sua próxima grande ideia começa aqui.",
+        "background": "#eeedff",
+        "color": "#4d43ad",
+        "radius": 16,
+        "fontSize": 16
+      }
+    },
+    {
+      "id": "welcome-button",
+      "type": "button",
+      "props": {
+        "text": "Começar agora",
+        "background": "#6d5dfc",
+        "color": "#ffffff",
+        "radius": 12,
+        "fontSize": 15
+      }
+    }
+  ],
+  "page": {
+    "background": "#ffffff",
+    "padding": 22,
+    "gap": 16
+  }
+}
