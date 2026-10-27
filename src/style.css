@@ -597,3 +597,21 @@ button {
     padding:0 8px
   }
 }
+
+/* F01: aviso para projetos cujo layout completo depende do editor F02. */
+.compat-warning {
+  border-bottom: 1px solid #665827;
+  background: #302b1e;
+  color: #ffe5a3;
+  font-size: 12px;
+  line-height: 1.5;
+  padding: 12px 18px;
+}
+.code-unavailable {
+  color: #c1c9e0;
+  border: 1px dashed #535b76;
+  border-radius: 10px;
+  line-height: 1.7;
+  padding: 25px;
+  font-size: 13px;
+}
